@@ -8,6 +8,7 @@ gem 'jquery-rails'
 gem 'turbolinks'
 gem 'jbuilder', '~> 2.0'
 gem 'tzinfo-data', platforms: [:mingw, :mswin]
+gem 'haml-rails'
 
 group :development do
   gem 'mysql2'

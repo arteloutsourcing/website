@@ -1,0 +1,278 @@
+#js-repo-pjax-container.repository-content.context-loader-container{"data-pjax-container" => ""}
+  #wiki-wrapper.wiki-wrapper.page
+    #wiki-content
+      .wrap.has-rightbar
+        #wiki-body.gollum-markdown-content.instapaper_body
+          .markdown-body
+            %blockquote
+              %h1 HEROKU CHEATSHEETS
+
+            %b
+              Deployment:
+            %p
+              heroku maintenance:on --remote heroku
+            %p
+              git push heroku:master
+            %p
+              heroku maintenance:off --remote heroku
+
+            %h3
+              %a#user-content-database-seed-load.anchor{"aria-hidden" => "true", :href => "#database-seed-load"}>
+                %span.octicon.octicon-link
+              Database seed load
+            %p
+              Load seed file:
+              %code heroku run rake db:seed --remote develop
+            %p
+              Perform all migrations:
+              %code heroku run rake db:migrate --remote develop
+            %p
+              Perform specified migration:
+              %code heroku run rake db:migrate VERSION=20131024141311 --remote develop
+            %p
+              Rollback 2 migrations:
+              %code heroku run rake db:rollback STEP=2 --remote develop
+            %p
+              Rollback specified migration:
+              %code rake db:migrate:down VERSION=20130726130203
+            %p
+              Perform database query:
+              %code echo "select * from plans" | heroku pg:psql --remote develop
+            %h3
+              %a#user-content-copy-production-db-to-stage.anchor{"aria-hidden" => "true", :href => "#copy-production-db-to-stage"}>
+                %span.octicon.octicon-link
+              Copy production db to stage
+            %pre
+              %code
+                :preserve
+                  heroku pg:reset HEROKU_POSTGRESQL_SILVER_URL --remote stage
+                  heroku pgbackups:restore DATABASE `heroku pgbackups:url --remote production` --remote stage
+            %h3
+              %a#user-content-copy-production-db-to-local.anchor{"aria-hidden" => "true", :href => "#copy-production-db-to-local"}>
+                %span.octicon.octicon-link
+              Copy production db to local
+            %p Assuming you're in the root directory:
+            %pre
+              %code
+                :preserve
+                  wget `heroku pgbackups:url --remote develop` -O latest.dump
+                  rake db:drop # Drops local database, if postgres complains about a connection still you may need to manually kill that pid
+                  rake db:create # Creates an empty database
+                  pg_restore -cOd waiverstack-app-develop latest.dump
+            %h3
+              %a#user-content-use-database-pgbackup-plugin.anchor{"aria-hidden" => "true", :href => "#use-database-pgbackup-plugin"}>
+                %span.octicon.octicon-link
+              Use database PGBackup plugin
+            %p
+              List backups:
+              %code heroku pgbackups --remote develop
+              Delete backup:
+              %code heroku pgbackups:destroy BACKUP_ID --remote develop
+              Create backup:
+              %code heroku pgbackups:capture --remote develop
+              Restore from backup:
+              %code heroku pgbackups:restore HEROKU_POSTGRESQL_AMBER_URL b001
+            %blockquote
+              %p HEROKU_POSTGRESQL_AMBER_URL just an example. Each environment has it's own database:
+            %h3
+              %a#user-content-restore-heroku-database-from-local-database.anchor{"aria-hidden" => "true", :href => "#restore-heroku-database-from-local-database"}>
+                %span.octicon.octicon-link
+              Restore Heroku database from local database
+            %p Dump local database:
+            %p
+              %code PGPASSWORD=1 pg_dump -Fc --no-acl --no-owner -h localhost -U USERNAME waiverstack-dev > mylocaldb.dump
+            %p
+              Dump local database and move to AWS or other shared place. Get a web link to it.
+              `heroku pgbackups:restore HEROKU_POSTGRESQL_AMBER_URL ........
+            %p
+              \.....
+              %a{:href => "https://s3.amazonaws.com/waiverstack-app-development/mylocaldb.dump"} https://s3.amazonaws.com/waiverstack-app-development/mylocaldb.dump
+              \--remote develop`
+            %h3
+              %a#user-content-restart-heroku-server.anchor{"aria-hidden" => "true", :href => "#restart-heroku-server"}>
+                %span.octicon.octicon-link
+              Restart heroku server
+            %p
+              %code heroku restart --remote develop
+            %h3
+              %a#user-content-dump-local-database.anchor{"aria-hidden" => "true", :href => "#dump-local-database"}>
+                %span.octicon.octicon-link
+              Dump local database:
+            %p PGPASSWORD=1 pg_dump -Fc --no-acl --no-owner -h localhost -U uch1 waiverstack-dev > mylocaldb.dump
+            %h3
+              %a#user-content-restore-local-database.anchor{"aria-hidden" => "true", :href => "#restore-local-database"}>
+                %span.octicon.octicon-link
+              Restore local database:
+            %ol.task-list
+              %li
+                %p DUMP LOCAL and move to AWS or other place
+              %li
+                %p
+                  heroku pgbackups:restore HEROKU_POSTGRESQL_AMBER_URL
+                  %a{:href => "https://s3.amazonaws.com/waiverstack-app-development/mylocaldb.dump"} https://s3.amazonaws.com/waiverstack-app-development/mylocaldb.dump
+                  \--remote develop
+            %h3
+              %a#user-content-heroku-console.anchor{"aria-hidden" => "true", :href => "#heroku-console"}>
+                %span.octicon.octicon-link
+              HEROKU CONSOLE
+            %p heroku run console --remote production
+            %h3
+              %a#user-content-deploy-to-stage.anchor{"aria-hidden" => "true", :href => "#deploy-to-stage"}>
+                %span.octicon.octicon-link
+              DEPLOY TO STAGE:
+            %p
+              heroku maintenance:on --remote stage
+              (git push origin stage)
+              git push stage stage:master
+              heroku run rake db:migrate --remote stage
+              heroku maintenance:off --remote stage
+            %h3
+              %a#user-content-deploy-to-develop.anchor{"aria-hidden" => "true", :href => "#deploy-to-develop"}>
+                %span.octicon.octicon-link
+              DEPLOY TO DEVELOP:
+            %p
+              heroku maintenance:on --remote develop
+              (git push origin develop)
+              git push develop develop:master
+              heroku run rake db:migrate --remote develop
+              heroku maintenance:off --remote develop
+            %h3
+              %a#user-content-deploy-to-qa.anchor{"aria-hidden" => "true", :href => "#deploy-to-qa"}>
+                %span.octicon.octicon-link
+              DEPLOY TO QA:
+            %p
+              heroku maintenance:on --remote qa
+              (git push origin qa)
+              git push qa qa:master
+              heroku run rake db:seed --remote qa
+              heroku run rake db:migrate --remote qa
+              heroku maintenance:off --remote qa
+            %h3
+              %a#user-content-deploy-to-production.anchor{"aria-hidden" => "true", :href => "#deploy-to-production"}>
+                %span.octicon.octicon-link
+              DEPLOY TO PRODUCTION:
+            %p
+              heroku maintenance:on --remote production
+              git tag 1.8.10
+              git push origin tag 1.8.10
+              heroku pgbackups --remote production
+              heroku pgbackups:destroy BACKUP_ID --remote production
+              heroku pgbackups:capture --remote production
+              git push production master:master
+              heroku run rake db:migrate --remote production
+              heroku maintenance:off --remote production
+            %hr/
+            %h3
+              %a#user-content-list-heroku-workers.anchor{"aria-hidden" => "true", :href => "#list-heroku-workers"}>
+                %span.octicon.octicon-link
+              LIST HEROKU WORKERS
+            %p
+              $ heroku ps --remote develop
+              \=== web:
+              %code bundle exec unicorn -p $PORT -c ./config/unicorn.rb
+              web.1: up for 9m
+              web.2: up for 9m
+            %p
+              \=== worker:
+              %code bundle exec sidekiq -C config/sidekiq.yml
+              worker.1: up for 9m
+            %h3
+              %a#user-content-display-logs-from-the-given-source.anchor{"aria-hidden" => "true", :href => "#display-logs-from-the-given-source"}>
+                %span.octicon.octicon-link
+              DISPLAY LOGS FROM THE GIVEN SOURCE
+            %p heroku logs --ps worker.1 --app waiverstack-app-develop
+            %h3
+              %a#user-content-restart--given-source.anchor{"aria-hidden" => "true", :href => "#restart--given-source"}>
+                %span.octicon.octicon-link
+              RESTART  GIVEN SOURCE
+            %p heroku restart worker.1 --app waiverstack-app-develop
+            %h3
+              %a#user-content-sidekiq-start.anchor{"aria-hidden" => "true", :href => "#sidekiq-start"}>
+                %span.octicon.octicon-link
+              SIDEKIQ START
+            %p
+              required these 2 things to be launched in terminal:
+              bundle exec sidekiq
+              redis-start
+            %h3
+              %a#user-content-database-cheatsheet.anchor{"aria-hidden" => "true", :href => "#database-cheatsheet"}>
+                %span.octicon.octicon-link
+              DATABASE CHEATSHEET
+            %h3
+              %a#user-content-update-database.anchor{"aria-hidden" => "true", :href => "#update-database"}>
+                %span.octicon.octicon-link
+              UPDATE DATABASE:
+            %p
+              wget
+              %code heroku pgbackups:url --remote develop
+              \-O latest.dump
+              rake db:drop
+              rake db:create
+              pg_restore -cOd develop latest2.dump
+            %h3
+              %a#user-content-database-pgbackups.anchor{"aria-hidden" => "true", :href => "#database-pgbackups"}>
+                %span.octicon.octicon-link
+              DATABASE PGBACKUPS
+            %p
+              heroku pgbackups --remote develop
+              heroku pgbackups:destroy BACKUP_ID --remote develop
+              heroku pgbackups:capture --remote develop
+            %p heroku pgbackups:restore HEROKU_POSTGRESQL_AMBER_URL b001
+            %h3
+              %a#user-content-push-a-local-database-into-the-app-remote-database.anchor{"aria-hidden" => "true", :href => "#push-a-local-database-into-the-app-remote-database"}>
+                %span.octicon.octicon-link
+              PUSH A LOCAL DATABASE INTO THE APP REMOTE DATABASE
+            %p
+              heroku run rake db:push  --remote develop
+              heroku pg:reset DATABASE
+              heroku run rake db:seed
+              \#also data from local database can be uploaded to heroku by installing taps gem and pushing data from local PostgreSQL db.
+              gem install taps
+              heroku db:push
+            %hr/
+            %h1
+              %a#user-content-git-cheatsheet.anchor{"aria-hidden" => "true", :href => "#git-cheatsheet"}>
+                %span.octicon.octicon-link
+              GIT CHEATSHEET
+            %h3
+              %a#user-content-git-stash-show.anchor{"aria-hidden" => "true", :href => "#git-stash-show"}>
+                %span.octicon.octicon-link
+              GIT STASH SHOW:
+            %p
+              git stash show stash@{1}
+              git stash show -p stash@{1}
+            %h3
+              %a#user-content-rename-branch.anchor{"aria-hidden" => "true", :href => "#rename-branch"}>
+                %span.octicon.octicon-link
+              RENAME BRANCH
+            %p
+              git branch -m master master-old
+              git push remote :master # delete master
+              git push remote master-old # create master-old on remote
+              git checkout -b master some-ref # create a new local master
+              git push remote master # create master on remote
+            %h3
+              %a#user-content-git-tag.anchor{"aria-hidden" => "true", :href => "#git-tag"}>
+                %span.octicon.octicon-link
+              GIT TAG
+            %p
+              git tag 1.8.10
+              git push origin tag 1.8.10
+            %blockquote
+              %p TIP:
+              %p How to specify what environment should be used when Heroku commands performs?
+              %p
+                Use: --remote
+                %em environment-name
+              %p
+                Or:  --app
+                %em application
+              %p Example:
+              %p
+                %code -- remote develop
+              %p
+                %code -- app waiverstack-app-develop
+          #wiki-footer
+            %a.wiki-empty-box{:href => "#"}
+              %span.octicon.octicon-plus
+              Add a custom footer
